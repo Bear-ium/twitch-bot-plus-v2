@@ -452,6 +452,8 @@ class Bot:
                     self.irc.send_raw("PONG :tmi.twitch.tv")
                 else:
                     self._route(raw)
+        except KeyboardInterrupt:
+            log("[Bot.run]", "Keyboard interrupt received.", reason="Shutdown")
         finally:
             log("[Bot.run]", f"Shutting down {self.name}...", reason="Shutdown")
             self._queue.put(None)
