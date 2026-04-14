@@ -341,7 +341,7 @@ class Bot:
             k: v
             for part in tag_str.split(";")
             if "=" in part
-            for k, v in [part.split("="), 1]
+            for k, v in [part.split("=", 1)]
         }
         return tags, reset
     
