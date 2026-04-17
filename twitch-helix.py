@@ -226,7 +226,7 @@ class HelixClient:
         self._delete("/eventsub/subscription", params={"id": subscription_id})
     
     #---------------------------------------
-    def cmd_send_chat_message(self, broadcaster_id: str, sender_id: str, message: str) -> dict:
+    def cmd_send_chat_message(self, broadcaster_id: str, sender_id: str, message: str, reply_to: str = None) -> dict:
         """
         Sends a message to the specified channel's chat.
 
@@ -235,11 +235,15 @@ class HelixClient:
             sender_id:      The ID of the bot sending the message
             message:        The message content
         """
-        return self._post("/chat/messages", body={
+        body = {
             "broadcaster_id":   broadcaster_id,
             "sender_id":        sender_id,
             "message":          message
-        })
+        }
+        if reply_to:
+            body["reply_parent_message_id"] = reply_to
+
+        return self._post("/chat/messages", body=body)
     
     def cmd_delete_message(self, broadcaster_id: str, moderator_id: str, message_id :str) -> None:
         """
@@ -251,10 +255,48 @@ class HelixClient:
             message_id:     The ID of the message to delete
         """
         self._delete("/moderation/chat", params={
-            "broadcaster_id": broadcaster_id,
-            "moderator_id": moderator_id,
-            "message_id": message_id
+            "broadcaster_id":   broadcaster_id,
+            "moderator_id":     moderator_id,
+            "message_id":       message_id
         })
+    
+    def cmd_ban_user(self, broadcaster_id: str, moderator_id: str, user_id: str, reason: str) -> None:
+        """
+        Permanently bans a user.
+        """
+        self._post("/moderation/bans", body={
+            "broadcaster_id":   broadcaster_id,
+            "moderator_id":     moderator_id,
+            "data": {
+                "user_id":          user_id,
+                "reason":           reason
+            }
+        })
+    
+    def cmd_unban_user(self, broadcaster_id: str, moderator_id: str, user_id: str) -> None:
+        """
+        Unbans or removes a timeout from a user.
+        """
+        self._delete("/moderation/bans", params={
+            "broadcaster_id":   broadcaster_id,
+            "moderator_id":     moderator_id,
+            "user_id":          user_id
+        })
+    
+    def cmd_timeout_user(self, broadcaster_id: str, moderator_id: str, user_id: str, duration: int, reason: str = "") -> None:
+        """
+        Timeouts a user for a given duration in seconds.
+        """
+        self._post("/moderation/bans", body={
+            "broadcaster_id":   broadcaster_id,
+            "moderator_id":     moderator_id,
+            "data": {
+                "user_id":          user_id,
+                "duration":         duration,
+                "reason":           reason
+            }
+        })
+        return
     
     def cmd_get_subscribers(self, broadcaster_id: str) -> list:
         """
@@ -527,6 +569,16 @@ class Bot:
                     str(e),
                     reason="Error"
                 )
+    
+    def _resolve_user(self, login: str) -> tuple[str, str]:
+        """
+        Resolves a username to their (user_id, display_name)
+        Raises ValueError if the user doesn't exist.
+        """
+        user = self.helix.get_user(login=login)
+        if not user:
+            raise ValueError(f"User '{login}' not found.")
+        return user.get("id"), user.get("display_name")
 
 
     #####
