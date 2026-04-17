@@ -1,4 +1,4 @@
 requests
 dotenv
 rich
-websockets
+websockets==12.0
