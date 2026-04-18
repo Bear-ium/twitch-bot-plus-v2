@@ -11,9 +11,9 @@ from websockets.exceptions import ConnectionClosedOK, ConnectionClosedError
 console = Console()
 _started = False
 
-COL_LOCATION = 25
-COL_REASON = 15
-COL_MESSAGE = 50
+COL_LOCATION = 45
+COL_REASON   = 15
+COL_MESSAGE  = 85
 
 def _start():
     global _started
@@ -544,9 +544,19 @@ class Bot:
         """
         topics = [
             ("channel.chat.message", "1", {
-                "broadcaster_user_id" : self.broadcaster_id,
-                "user_id" :             self.bot_user_id
+                "broadcaster_user_id":  self.broadcaster_id,
+                "user_id":              self.bot_user_id
             }),
+            ("channel.follow", "2", {
+                "broadcaster_user_id":  self.broadcaster_id,
+                "moderator_user_id":         self.bot_user_id
+            }),
+            ("stream.online", "1", {
+                "broadcaster_user_id":  self.broadcaster_id
+            }),
+            ("stream.offline", "1", {
+                "broadcaster_user_id":  self.broadcaster_id
+            })
         ]
         
         for sub_type, version, condition in topics:
